@@ -1,0 +1,120 @@
+import { nanoid } from "nanoid";
+import { getDb } from "./database.js";
+import type { Session } from "../providers/types.js";
+
+export interface StoredMessage {
+  id: number;
+  sessionId: string;
+  role: "user" | "assistant" | "system" | "tool";
+  content: string;
+  toolCalls?: string;
+  tokenCount?: number;
+  timestamp: number;
+}
+
+export class SessionStore {
+  createSession(
+    provider: string,
+    model?: string,
+    providerSessionId?: string,
+  ): Session {
+    const id = nanoid();
+    const now = Date.now();
+    const db = getDb();
+
+    db.prepare(
+      `INSERT INTO sessions (id, provider, provider_session_id, model, status, created_at, last_active_at)
+       VALUES (?, ?, ?, ?, 'active', ?, ?)`,
+    ).run(id, provider, providerSessionId ?? null, model ?? null, now, now);
+
+    return {
+      id,
+      providerId: provider,
+      providerSessionId,
+      createdAt: now,
+      lastActiveAt: now,
+    };
+  }
+
+  getSession(id: string): Session | null {
+    const db = getDb();
+    const row = db
+      .prepare("SELECT * FROM sessions WHERE id = ?")
+      .get(id) as Record<string, unknown> | undefined;
+
+    if (!row) return null;
+
+    return {
+      id: row.id as string,
+      providerId: row.provider as string,
+      providerSessionId: row.provider_session_id as string | undefined,
+      createdAt: row.created_at as number,
+      lastActiveAt: row.last_active_at as number,
+    };
+  }
+
+  updateLastActive(sessionId: string): void {
+    const db = getDb();
+    db.prepare("UPDATE sessions SET last_active_at = ? WHERE id = ?").run(
+      Date.now(),
+      sessionId,
+    );
+  }
+
+  addMessage(
+    sessionId: string,
+    role: StoredMessage["role"],
+    content: string,
+    toolCalls?: string,
+    tokenCount?: number,
+  ): void {
+    const db = getDb();
+    db.prepare(
+      `INSERT INTO messages (session_id, role, content, tool_calls, token_count, timestamp)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+    ).run(
+      sessionId,
+      role,
+      content,
+      toolCalls ?? null,
+      tokenCount ?? null,
+      Date.now(),
+    );
+  }
+
+  getMessages(sessionId: string, limit = 100): StoredMessage[] {
+    const db = getDb();
+    const rows = db
+      .prepare(
+        `SELECT * FROM messages WHERE session_id = ? ORDER BY timestamp ASC LIMIT ?`,
+      )
+      .all(sessionId, limit) as Record<string, unknown>[];
+
+    return rows.map((row) => ({
+      id: row.id as number,
+      sessionId: row.session_id as string,
+      role: row.role as StoredMessage["role"],
+      content: row.content as string,
+      toolCalls: row.tool_calls as string | undefined,
+      tokenCount: row.token_count as number | undefined,
+      timestamp: row.timestamp as number,
+    }));
+  }
+
+  listSessions(limit = 20): Session[] {
+    const db = getDb();
+    const rows = db
+      .prepare(
+        "SELECT * FROM sessions ORDER BY last_active_at DESC LIMIT ?",
+      )
+      .all(limit) as Record<string, unknown>[];
+
+    return rows.map((row) => ({
+      id: row.id as string,
+      providerId: row.provider as string,
+      providerSessionId: row.provider_session_id as string | undefined,
+      createdAt: row.created_at as number,
+      lastActiveAt: row.last_active_at as number,
+    }));
+  }
+}

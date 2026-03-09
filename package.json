@@ -1,0 +1,41 @@
+{
+  "name": "helios",
+  "version": "0.1.0",
+  "description": "Autonomous ML research agent TUI",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "helios": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.tsx",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "^0.2.0",
+    "@hono/node-server": "^1.19.0",
+    "@inkjs/ui": "^2.0.0",
+    "@openauthjs/openauth": "^0.4.3",
+    "asciichart": "^1.5.25",
+    "better-sqlite3": "^11.8.1",
+    "date-fns": "^4.1.0",
+    "hono": "^4.7.0",
+    "ink": "^6.0.0",
+    "ink-text-input": "^6.0.0",
+    "marked": "^15.0.0",
+    "marked-terminal": "^7.3.0",
+    "nanoid": "^5.1.0",
+    "react": "^19.0.0",
+    "ssh2": "^1.16.0",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/asciichart": "^1.5.8",
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/react": "^19.0.0",
+    "@types/ssh2": "^1.15.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  }
+}
