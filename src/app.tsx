@@ -47,8 +47,6 @@ interface AppProps {
 }
 
 export function App({ defaultProvider = "claude" }: AppProps) {
-  const [ready, setReady] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [orchestrator, setOrchestrator] = useState<Orchestrator | null>(
     null,
   );
@@ -57,80 +55,52 @@ export function App({ defaultProvider = "claude" }: AppProps) {
   );
 
   useEffect(() => {
-    async function init() {
-      try {
-        // Auth
-        const authManager = new AuthManager();
+    // Auth
+    const authManager = new AuthManager();
 
-        // Providers
-        const claudeProvider = new ClaudeProvider(authManager);
-        const openaiProvider = new OpenAIProvider(authManager);
+    // Providers
+    const claudeProvider = new ClaudeProvider(authManager);
+    const openaiProvider = new OpenAIProvider(authManager);
 
-        // Remote
-        const connectionPool = new ConnectionPool();
-        const executor = new RemoteExecutor(connectionPool);
-        const fileSync = new FileSync();
+    // Remote
+    const connectionPool = new ConnectionPool();
+    const executor = new RemoteExecutor(connectionPool);
+    const fileSync = new FileSync();
 
-        // Metrics
-        const metricStore = new MetricStore();
+    // Metrics
+    const metricStore = new MetricStore();
 
-        // Orchestrator
-        const orch = new Orchestrator({
-          defaultProvider,
-          systemPrompt: SYSTEM_PROMPT,
-        });
+    // Orchestrator
+    const orch = new Orchestrator({
+      defaultProvider,
+      systemPrompt: SYSTEM_PROMPT,
+    });
 
-        orch.registerProvider(claudeProvider);
-        orch.registerProvider(openaiProvider);
+    orch.registerProvider(claudeProvider);
+    orch.registerProvider(openaiProvider);
 
-        // Register tools
-        orch.registerTools([
-          createRemoteExecTool(executor),
-          createRemoteExecBackgroundTool(executor),
-          createUploadTool(fileSync),
-          createDownloadTool(fileSync),
-          createMetricsQueryTool(metricStore),
-          createListMachinesTool(connectionPool),
-        ]);
+    // Register tools
+    orch.registerTools([
+      createRemoteExecTool(executor),
+      createRemoteExecBackgroundTool(executor),
+      createUploadTool(fileSync),
+      createDownloadTool(fileSync),
+      createMetricsQueryTool(metricStore),
+      createListMachinesTool(connectionPool),
+    ]);
 
-        // Scheduler
-        const triggerScheduler = new TriggerScheduler(connectionPool);
-        const sleepMgr = new SleepManager(triggerScheduler, orch);
+    // Scheduler
+    const triggerScheduler = new TriggerScheduler(connectionPool);
+    const sleepMgr = new SleepManager(triggerScheduler, orch);
 
-        // Register sleep tool (needs sleep manager)
-        orch.registerTool(createSleepTool(sleepMgr));
+    // Register sleep tool (needs sleep manager)
+    orch.registerTool(createSleepTool(sleepMgr));
 
-        // Start session
-        await orch.startSession();
-
-        setOrchestrator(orch);
-        setSleepManager(sleepMgr);
-        setReady(true);
-      } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "Initialization failed",
-        );
-      }
-    }
-
-    init();
+    setOrchestrator(orch);
+    setSleepManager(sleepMgr);
   }, [defaultProvider]);
 
-  if (error) {
-    return (
-      <Box flexDirection="column" padding={1}>
-        <Text color="red" bold>
-          Helios initialization failed:
-        </Text>
-        <Text color="red">{error}</Text>
-        <Text color="gray">
-          Ensure ANTHROPIC_API_KEY is set or run with --provider openai
-        </Text>
-      </Box>
-    );
-  }
-
-  if (!ready || !orchestrator || !sleepManager) {
+  if (!orchestrator || !sleepManager) {
     return (
       <Box padding={1}>
         <Text color="yellow">Starting Helios...</Text>

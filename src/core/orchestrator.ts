@@ -18,10 +18,14 @@ export class Orchestrator {
   private activeProvider: ModelProvider | null = null;
   private activeSession: Session | null = null;
   private tools: ToolDefinition[] = [];
+  private _totalCostUsd = 0;
   readonly stateMachine = new AgentStateMachine();
   readonly sessionStore = new SessionStore();
+  readonly config: OrchestratorConfig;
 
-  constructor(private config: OrchestratorConfig) {}
+  constructor(config: OrchestratorConfig) {
+    this.config = config;
+  }
 
   registerProvider(provider: ModelProvider): void {
     this.providers.set(provider.name, provider);
@@ -33,6 +37,10 @@ export class Orchestrator {
 
   registerTools(tools: ToolDefinition[]): void {
     this.tools.push(...tools);
+  }
+
+  getTools(): ToolDefinition[] {
+    return this.tools;
   }
 
   getProvider(name?: string): ModelProvider | null {
@@ -51,6 +59,11 @@ export class Orchestrator {
     this.activeProvider = provider;
   }
 
+  async ensureSession(): Promise<Session> {
+    if (this.activeSession) return this.activeSession;
+    return this.startSession();
+  }
+
   async startSession(config?: Partial<SessionConfig>): Promise<Session> {
     if (!this.activeProvider) {
       await this.switchProvider(this.config.defaultProvider);
@@ -64,34 +77,44 @@ export class Orchestrator {
     const session =
       await this.activeProvider!.createSession(sessionConfig);
     this.activeSession = session;
-    this.stateMachine.transition("active", "Session started");
+
+    if (this.stateMachine.state === "idle") {
+      this.stateMachine.transition("active", "Session started");
+    }
+
     return session;
   }
 
   async *send(message: string): AsyncGenerator<AgentEvent> {
-    if (!this.activeProvider || !this.activeSession) {
-      throw new Error("No active session");
+    if (!this.activeProvider) {
+      await this.switchProvider(this.config.defaultProvider);
     }
 
-    this.sessionStore.updateLastActive(this.activeSession.id);
-    this.sessionStore.addMessage(this.activeSession.id, "user", message);
+    const session = await this.ensureSession();
+    this.sessionStore.updateLastActive(session.id);
+    this.sessionStore.addMessage(session.id, "user", message);
 
     let fullResponse = "";
 
-    for await (const event of this.activeProvider.send(
-      this.activeSession,
+    for await (const event of this.activeProvider!.send(
+      session,
       message,
       this.tools,
     )) {
       if (event.type === "text" && event.delta) {
         fullResponse += event.delta;
       }
+
+      if (event.type === "done" && event.usage?.costUsd) {
+        this._totalCostUsd += event.usage.costUsd;
+      }
+
       yield event;
     }
 
     if (fullResponse) {
       this.sessionStore.addMessage(
-        this.activeSession.id,
+        session.id,
         "assistant",
         fullResponse,
       );
@@ -114,5 +137,9 @@ export class Orchestrator {
 
   get currentState() {
     return this.stateMachine.state;
+  }
+
+  get totalCostUsd(): number {
+    return this._totalCostUsd;
   }
 }

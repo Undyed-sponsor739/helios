@@ -9,6 +9,7 @@ interface StatusBarProps {
 export function StatusBar({ orchestrator }: StatusBarProps) {
   const state = orchestrator.currentState;
   const provider = orchestrator.currentProvider;
+  const cost = orchestrator.totalCostUsd;
 
   const stateColor = {
     idle: "gray",
@@ -29,6 +30,12 @@ export function StatusBar({ orchestrator }: StatusBarProps) {
       <Text color={stateColor}>
         {state.toUpperCase()}
       </Text>
+      {cost > 0 && (
+        <>
+          <Text color="gray"> | </Text>
+          <Text color="gray">${cost.toFixed(4)}</Text>
+        </>
+      )}
     </Box>
   );
 }
