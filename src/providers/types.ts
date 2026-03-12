@@ -64,6 +64,8 @@ export interface SessionConfig {
   model?: string;
   temperature?: number;
   maxTokens?: number;
+  /** When true, session is not persisted to the database. Used by skill executor. */
+  ephemeral?: boolean;
 }
 
 // --- Tool Definition ---

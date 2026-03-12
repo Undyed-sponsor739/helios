@@ -1,9 +1,8 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
-import { Box, Text, useInput, useApp } from "ink";
+import { Box, Text, useInput, useApp, measureElement } from "ink";
 import type { EventEmitter } from "node:events";
 import { useScreenSize } from "fullscreen-ink";
-import { ScrollView, type ScrollViewRef } from "ink-scroll-view";
-import { ConversationPanel } from "./panels/conversation.js";
+import { MessageLine, PulsingIndicator } from "./panels/conversation.js";
 import { TaskListPanel } from "./panels/task-list.js";
 import { MetricsDashboard } from "./panels/metrics-dashboard.js";
 import { StatusBar } from "./components/status-bar.js";
@@ -21,7 +20,7 @@ import { StickyNotesPanel } from "./panels/sticky-notes.js";
 import { VERSION, checkForUpdate } from "../version.js";
 import { COMMANDS, handleSlashCommand } from "./commands.js";
 import { pollTaskStatuses, handleFinishedTasks, buildMonitorMessage } from "../core/task-poller.js";
-import { formatDuration, formatError } from "./format.js";
+import { formatDuration, formatError, truncate } from "./format.js";
 import type { Message, ToolData, TaskInfo } from "./types.js";
 import type { SlashCommand } from "./commands.js";
 
@@ -47,9 +46,9 @@ export function Layout({ runtime, mouseEmitter, headless, initialPrompt, initial
   messagesRef.current = messages;
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamingStartedAt, setStreamingStartedAt] = useState<number | null>(null);
-  const scrollRef = useRef<ScrollViewRef>(null);
-
-  const [userScrolled, setUserScrolled] = useState(false);
+  const [scrollUp, setScrollUp] = useState(0);
+  const contentRef = useRef<any>(null);
+  const viewportRef = useRef<any>(null);
   const [tasks, setTasks] = useState<TaskInfo[]>([]);
   const [metricData, setMetricData] = useState<Map<string, number[]>>(new Map());
   const [stickyNotes, setStickyNotes] = useState<StickyNote[]>([]);
@@ -72,9 +71,7 @@ export function Layout({ runtime, mouseEmitter, headless, initialPrompt, initial
 
         // Build TaskInfo[] for UI state
         const updated: TaskInfo[] = statuses.map(({ proc, running }) => {
-          const shortCmd = proc.command.length > 40
-            ? proc.command.slice(0, 40) + "..."
-            : proc.command;
+          const shortCmd = truncate(proc.command, 40);
           return {
             id: `${proc.machineId}:${proc.pid}`,
             name: shortCmd,
@@ -121,36 +118,29 @@ export function Layout({ runtime, mouseEmitter, headless, initialPrompt, initial
     return () => { stopped = true; if (timer) clearTimeout(timer); };
   }, [executor, connectionPool, metricCollector, metricStore]);
 
-  // Auto-scroll to bottom when messages change, overlay closes, or user hasn't scrolled up
-  useEffect(() => {
-    if (!userScrolled) {
-      scrollRef.current?.scrollToBottom();
-    }
-  }, [messages, userScrolled, activeOverlay]);
-
-  // Re-snap to bottom when streaming starts, and keep scrolling during streaming
+  // Re-snap to bottom when streaming starts.
   useEffect(() => {
     if (isStreaming) {
-      setUserScrolled(false);
-      // During streaming, content changes faster than React state updates trigger effects.
-      // Poll scrollToBottom on a short interval to keep up.
-      const timer = setInterval(() => {
-        scrollRef.current?.scrollToBottom();
-      }, 100);
-      return () => clearInterval(timer);
+      setScrollUp(0);
     }
   }, [isStreaming]);
 
-  // Clamped scroll helper — ink-scroll-view's scrollBy has a bug where
-  // it clamps to contentHeight instead of contentHeight - viewportHeight,
-  // allowing you to scroll past the bottom into empty space.
-  const clampedScrollBy = useCallback((delta: number) => {
-    const sv = scrollRef.current;
-    if (!sv) return;
-    const target = Math.max(0, Math.min(sv.getScrollOffset() + delta, sv.getBottomOffset()));
-    sv.scrollTo(target);
-    return target >= sv.getBottomOffset();
+  // Measure current max scroll (content overflow above viewport).
+  const getMaxScroll = useCallback(() => {
+    if (!contentRef.current || !viewportRef.current) return 0;
+    const ch = measureElement(contentRef.current).height;
+    const vh = measureElement(viewportRef.current).height;
+    return Math.max(0, ch - vh);
   }, []);
+
+  // Scroll by delta rows (positive = up into history, negative = toward bottom).
+  const scrollBy = useCallback((delta: number) => {
+    setScrollUp((prev) => {
+      const next = prev + delta;
+      if (next <= 0) return 0;
+      return Math.min(next, getMaxScroll());
+    });
+  }, [getMaxScroll]);
 
   // Enable SGR mouse reporting and handle scroll via mouseEmitter
   useEffect(() => {
@@ -162,16 +152,14 @@ export function Layout({ runtime, mouseEmitter, headless, initialPrompt, initial
     if (!mouseEmitter) return;
     const handler = (evt: MouseEvent) => {
       if (evt.type === "scroll_up") {
-        clampedScrollBy(-3);
-        setUserScrolled(true);
+        scrollBy(3);
       } else if (evt.type === "scroll_down") {
-        const atBottom = clampedScrollBy(3);
-        if (atBottom) setUserScrolled(false);
+        scrollBy(-3);
       }
     };
     mouseEmitter.on("mouse", handler);
     return () => { mouseEmitter.removeListener("mouse", handler); };
-  }, [mouseEmitter, clampedScrollBy]);
+  }, [mouseEmitter, scrollBy]);
 
   useInput((input, key) => {
     // Toggle overlays — always available
@@ -215,12 +203,10 @@ export function Layout({ runtime, mouseEmitter, headless, initialPrompt, initial
     if (activeOverlay !== "none") return;
 
     if (key.pageUp) {
-      clampedScrollBy(-10);
-      setUserScrolled(true);
+      scrollBy(10);
     }
     if (key.pageDown) {
-      const atBottom = clampedScrollBy(10);
-      if (atBottom) setUserScrolled(false);
+      scrollBy(-10);
     }
   });
 
@@ -231,7 +217,10 @@ export function Layout({ runtime, mouseEmitter, headless, initialPrompt, initial
         const next = [...prev, { id, role, content, tool }];
         // Cap at 500 messages to prevent OOM in long sessions.
         // Old messages are still persisted in the session store.
-        return next.length > 500 ? next.slice(-500) : next;
+        if (next.length > 500) {
+          return next.slice(-500);
+        }
+        return next;
       });
       return id;
     },
@@ -247,6 +236,9 @@ export function Layout({ runtime, mouseEmitter, headless, initialPrompt, initial
   const handleSubmit = useCallback(
     async (input: string, attachments?: Attachment[]) => {
       if (!input.trim()) return;
+
+      // Snap to bottom on any submission — user intent is to interact, not read history.
+      setScrollUp(0);
 
       if (input.startsWith("/")) {
         await handleSlashCommand(input, {
@@ -490,12 +482,32 @@ export function Layout({ runtime, mouseEmitter, headless, initialPrompt, initial
                 )}
               </Box>
             ) : (
-              <ScrollView ref={scrollRef}>
-                <ConversationPanel
-                  messages={messages}
-                  isStreaming={isStreaming}
-                />
-              </ScrollView>
+              <Box
+                ref={viewportRef}
+                overflow="hidden"
+                flexGrow={1}
+                flexShrink={1}
+                flexDirection="column"
+                justifyContent="flex-end"
+              >
+                <Box
+                  ref={contentRef}
+                  flexDirection="column"
+                  flexShrink={0}
+                  marginBottom={scrollUp > 0 ? -scrollUp : undefined}
+                >
+                  {messages.map((msg) => (
+                    <Box key={msg.id} paddingX={1}>
+                      <MessageLine message={msg} />
+                    </Box>
+                  ))}
+                  {isStreaming && (
+                    <Box paddingX={1} paddingLeft={3}>
+                      <PulsingIndicator />
+                    </Box>
+                  )}
+                </Box>
+              </Box>
             )}
           </Box>
           {stickyNotes.length > 0 && (
@@ -607,3 +619,4 @@ function ShimmerLogo({ text }: { text: string }) {
     </Text>
   );
 }
+

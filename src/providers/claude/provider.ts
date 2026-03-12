@@ -25,7 +25,7 @@ import {
   type Attachment,
 } from "../types.js";
 import type { AuthManager } from "../auth/auth-manager.js";
-import { SessionStore } from "../../store/session-store.js";
+import { SessionStore, createEphemeralSession } from "../../store/session-store.js";
 import { parseSSELines } from "../sse.js";
 
 const ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages";
@@ -159,10 +159,9 @@ export class ClaudeProvider implements ModelProvider {
   }
 
   async createSession(config: SessionConfig): Promise<Session> {
-    const session = this.sessionStore.createSession(
-      "claude",
-      config.model ?? this.currentModel,
-    );
+    const session = config.ephemeral
+      ? createEphemeralSession("claude")
+      : this.sessionStore.createSession("claude", config.model ?? this.currentModel);
 
     if (config.systemPrompt) {
       this.systemPrompts.set(session.id, config.systemPrompt);
@@ -176,7 +175,13 @@ export class ClaudeProvider implements ModelProvider {
     const session = this.sessionStore.getSession(id);
     if (!session) throw new Error(`Session ${id} not found`);
     if (!this.conversationHistory.has(id)) {
-      this.conversationHistory.set(id, []);
+      // Restore conversation history from stored messages so the model
+      // has context from the previous session.
+      const stored = this.sessionStore.getMessages(id, 500);
+      const history: AnthropicMessage[] = stored
+        .filter((m) => m.role === "user" || m.role === "assistant")
+        .map((m) => ({ role: m.role as "user" | "assistant", content: m.content }));
+      this.conversationHistory.set(id, history);
     }
     return session;
   }
@@ -589,7 +594,7 @@ export class ClaudeProvider implements ModelProvider {
     }
     body.tools = toolDefs;
 
-    debugLog("claude-api", "request", { model: body.model, messages: history.length, tools: toolDefs.length, maxTokens: body.max_tokens });
+    debugLog("claude-api", "request", { model: body.model, messages: messages.length, tools: toolDefs.length, maxTokens: body.max_tokens });
 
     const resp = await fetch(ANTHROPIC_API_URL, {
       method: "POST",

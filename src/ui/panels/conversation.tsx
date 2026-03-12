@@ -6,32 +6,10 @@ import { sparkline } from "./metrics-dashboard.js";
 import { truncate, formatMetricValue } from "../format.js";
 import type { Message, ToolData } from "../types.js";
 
-interface ConversationPanelProps {
-  messages: Message[];
-  isStreaming: boolean;
-}
+const fmtVal = (v: number | null): string =>
+  v === null ? "\u2014" : formatMetricValue(v);
 
-export function ConversationPanel({
-  messages,
-  isStreaming,
-}: ConversationPanelProps) {
-  if (messages.length === 0) return null;
-
-  return (
-    <Box flexDirection="column" paddingX={1} paddingBottom={1}>
-      {messages.map((msg) => (
-        <MessageLine key={msg.id} message={msg} />
-      ))}
-      {isStreaming && (
-        <Box paddingLeft={2}>
-          <PulsingIndicator />
-        </Box>
-      )}
-    </Box>
-  );
-}
-
-const MessageLine = memo(function MessageLine({ message }: { message: Message }) {
+export const MessageLine = memo(function MessageLine({ message }: { message: Message }) {
   const { role, content, tool } = message;
 
   switch (role) {
@@ -85,7 +63,7 @@ function AssistantMessage({ content }: { content: string }) {
 
 const PULSE_FRAMES = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
 
-function PulsingIndicator() {
+export function PulsingIndicator() {
   const [frame, setFrame] = useState(0);
   useEffect(() => {
     const timer = setInterval(() => {
@@ -392,9 +370,6 @@ function ShowMetricsDisplay({ tool }: { tool: ToolData }) {
     }
   };
 
-  const formatValue = (v: number | null): string =>
-    v === null ? "\u2014" : formatMetricValue(v);
-
   return (
     <Box flexDirection="column" paddingLeft={2}>
       <ToolHeader icon="◈" label="show_metrics" />
@@ -414,10 +389,10 @@ function ShowMetricsDisplay({ tool }: { tool: ToolData }) {
                 <Box>
                   <Text color={C.dim} dimColor>{"\u2503 "}</Text>
                   <Text color={C.text}>
-                    {formatValue(m.latest)}
+                    {fmtVal(m.latest)}
                   </Text>
                   <Text color={C.dim}>
-                    {" "}min {formatValue(m.min)} max {formatValue(m.max)}
+                    {" "}min {fmtVal(m.min)} max {fmtVal(m.max)}
                   </Text>
                   <Text color={trendColor(m.trend)}>
                     {" "}{trendIcon(m.trend)} {m.trend}
@@ -503,9 +478,6 @@ function CompareRunsDisplay({ tool }: { tool: ToolData }) {
       default: return C.dim;
     }
   };
-
-  const fmtVal = (v: number | null): string =>
-    v === null ? "—" : formatMetricValue(v);
 
   return (
     <Box flexDirection="column" paddingLeft={2}>

@@ -26,6 +26,12 @@ export interface SessionSummary {
   outputTokens: number;
 }
 
+/** Create an in-memory session that is NOT persisted to the database. */
+export function createEphemeralSession(providerId: string): Session {
+  const now = Date.now();
+  return { id: `eph-${nanoid()}`, providerId, createdAt: now, lastActiveAt: now };
+}
+
 export class SessionStore {
   private agentId: string;
 
@@ -132,7 +138,10 @@ export class SessionStore {
     const db = getDb();
     const rows = db
       .prepare(
-        "SELECT * FROM sessions WHERE agent_id = ? ORDER BY last_active_at DESC LIMIT ?",
+        `SELECT * FROM sessions s
+         WHERE s.agent_id = ?
+           AND EXISTS (SELECT 1 FROM messages m WHERE m.session_id = s.id)
+         ORDER BY s.last_active_at DESC LIMIT ?`,
       )
       .all(this.agentId, limit) as Record<string, unknown>[];
 
@@ -166,6 +175,7 @@ export class SessionStore {
          LEFT JOIN messages m ON m.session_id = s.id
          WHERE s.agent_id = ?
          GROUP BY s.id
+         HAVING COUNT(m.id) > 0
          ORDER BY s.last_active_at DESC
          LIMIT ?`,
       )

@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { Box, Text, useInput } from "ink";
 import { C, G } from "../theme.js";
 import type { SlashCommand } from "../commands.js";
@@ -18,7 +18,13 @@ export function InputBar({
 }: InputBarProps) {
   const COMMANDS = commandsProp ?? [];
   const [value, setValue] = useState("");
+  const valueRef = useRef("");
   const [cursorPos, setCursorPos] = useState(0);
+  // Refs track the real-time value and cursor position across batched input
+  // events. Without these, fast typing uses stale closure-captured values.
+  const cursorRef = useRef(0);
+  const moveCursor = (pos: number) => { cursorRef.current = pos; setCursorPos(pos); };
+  const setVal = (v: string) => { valueRef.current = v; setValue(v); };
   const [history, setHistory] = useState<string[]>([]);
   const [historyIdx, setHistoryIdx] = useState(-1);
   const [selectedIdx, setSelectedIdx] = useState(0);
@@ -38,15 +44,18 @@ export function InputBar({
   useInput((input, key) => {
     if (disabled) return;
 
+    const pos = cursorRef.current;
+
     if (key.return) {
-      if (value.trim()) {
-        onSubmit(value.trim());
-        setHistory((prev) => [value.trim(), ...prev]);
-        setValue("");
-        setCursorPos(0);
-        setHistoryIdx(-1);
-        setSelectedIdx(0);
+      const trimmed = valueRef.current.trim();
+      if (trimmed) {
+        onSubmit(trimmed);
+        setHistory((h) => [trimmed, ...h].slice(0, 50));
       }
+      setVal("");
+      moveCursor(0);
+      setHistoryIdx(-1);
+      setSelectedIdx(0);
       return;
     }
 
@@ -54,16 +63,17 @@ export function InputBar({
       const cmd = filteredCommands[selectedIdx];
       if (cmd) {
         const completed = `/${cmd.name}${cmd.args ? " " : ""}`;
-        setValue(completed);
-        setCursorPos(completed.length);
+        setVal(completed);
+        moveCursor(completed.length);
       }
       return;
     }
 
     if (key.backspace || key.delete) {
-      if (cursorPos > 0) {
-        setValue((prev) => prev.slice(0, cursorPos - 1) + prev.slice(cursorPos));
-        setCursorPos((prev) => prev - 1);
+      if (pos > 0) {
+        const v = valueRef.current;
+        setVal(v.slice(0, pos - 1) + v.slice(pos));
+        moveCursor(pos - 1);
       }
       setSelectedIdx(0);
       return;
@@ -71,13 +81,13 @@ export function InputBar({
 
     // Left arrow
     if (key.leftArrow) {
-      setCursorPos((prev) => Math.max(0, prev - 1));
+      moveCursor(Math.max(0, pos - 1));
       return;
     }
 
     // Right arrow
     if (key.rightArrow) {
-      setCursorPos((prev) => Math.min(value.length, prev + 1));
+      moveCursor(Math.min(valueRef.current.length, pos + 1));
       return;
     }
 
@@ -89,8 +99,8 @@ export function InputBar({
       } else if (history.length > 0) {
         const newIdx = Math.min(historyIdx + 1, history.length - 1);
         setHistoryIdx(newIdx);
-        setValue(history[newIdx]);
-        setCursorPos(history[newIdx].length);
+        setVal(history[newIdx]);
+        moveCursor(history[newIdx].length);
       }
       return;
     }
@@ -103,13 +113,13 @@ export function InputBar({
       } else {
         if (historyIdx <= 0) {
           setHistoryIdx(-1);
-          setValue("");
-          setCursorPos(0);
+          setVal("");
+          moveCursor(0);
         } else {
           const newIdx = historyIdx - 1;
           setHistoryIdx(newIdx);
-          setValue(history[newIdx]);
-          setCursorPos(history[newIdx].length);
+          setVal(history[newIdx]);
+          moveCursor(history[newIdx].length);
         }
       }
       return;
@@ -117,36 +127,38 @@ export function InputBar({
 
     // Home / Ctrl+A
     if (key.ctrl && input === "a") {
-      setCursorPos(0);
+      moveCursor(0);
       return;
     }
 
     // End / Ctrl+E
     if (key.ctrl && input === "e") {
-      setCursorPos(value.length);
+      moveCursor(valueRef.current.length);
       return;
     }
 
     // Ctrl+U — clear line
     if (key.ctrl && input === "u") {
-      setValue("");
-      setCursorPos(0);
+      setVal("");
+      moveCursor(0);
       return;
     }
 
     // Ctrl+W — delete word backward
     if (key.ctrl && input === "w") {
-      const before = value.slice(0, cursorPos);
-      const after = value.slice(cursorPos);
+      const v = valueRef.current;
+      const before = v.slice(0, pos);
+      const after = v.slice(pos);
       const trimmed = before.replace(/\S+\s*$/, "");
-      setValue(trimmed + after);
-      setCursorPos(trimmed.length);
+      setVal(trimmed + after);
+      moveCursor(trimmed.length);
       return;
     }
 
     if (input && !key.ctrl && !key.meta) {
-      setValue((prev) => prev.slice(0, cursorPos) + input + prev.slice(cursorPos));
-      setCursorPos((prev) => prev + input.length);
+      const v = valueRef.current;
+      setVal(v.slice(0, pos) + input + v.slice(pos));
+      moveCursor(pos + input.length);
       setHistoryIdx(-1);
       setSelectedIdx(0);
     }

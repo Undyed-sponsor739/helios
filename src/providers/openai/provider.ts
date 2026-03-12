@@ -15,7 +15,7 @@ import { TransientError, isTransient, sleep } from "../retry.js";
 import { formatError } from "../../ui/format.js";
 import { WEB_SEARCH_TOOL, debugLog } from "../../paths.js";
 import { parseSSELines } from "../sse.js";
-import { SessionStore } from "../../store/session-store.js";
+import { SessionStore, createEphemeralSession } from "../../store/session-store.js";
 import { OpenAIOAuth } from "./oauth.js";
 
 const CODEX_API_URL =
@@ -146,10 +146,9 @@ export class OpenAIProvider implements ModelProvider {
   }
 
   async createSession(config: SessionConfig): Promise<Session> {
-    const session = this.sessionStore.createSession(
-      "openai",
-      config.model ?? this.currentModel,
-    );
+    const session = config.ephemeral
+      ? createEphemeralSession("openai")
+      : this.sessionStore.createSession("openai", config.model ?? this.currentModel);
     this.conversationHistory.set(session.id, []);
 
     if (config.systemPrompt) {
@@ -163,7 +162,21 @@ export class OpenAIProvider implements ModelProvider {
     const session = this.sessionStore.getSession(id);
     if (!session) throw new Error(`Session ${id} not found`);
     if (!this.conversationHistory.has(id)) {
-      this.conversationHistory.set(id, []);
+      // Restore conversation history from stored messages so the model
+      // has context from the previous session.
+      const stored = this.sessionStore.getMessages(id, 500);
+      const history: ResponseItem[] = stored
+        .filter((m) => m.role === "user" || m.role === "assistant")
+        .map((m) => ({
+          type: "message" as const,
+          role: m.role as "user" | "assistant",
+          content: [
+            m.role === "user"
+              ? { type: "input_text" as const, text: m.content }
+              : { type: "output_text" as const, text: m.content },
+          ],
+        }));
+      this.conversationHistory.set(id, history);
     }
     return session;
   }

@@ -76,6 +76,7 @@ async function* runOnce(
   const session = await provider.createSession({
     systemPrompt,
     model: skill.config.model ?? undefined,
+    ephemeral: true,
   });
 
   const stream = provider.send(session, input, tools);
@@ -117,12 +118,16 @@ export async function* executeSkill(
     return;
   }
 
-  // Check auth for cross-provider skills
-  if (skill.config.provider === "other") {
-    if (!(await provider.isAuthenticated())) {
+  // Ensure the provider is authenticated (skills can target any provider)
+  if (skill.config.provider) {
+    try {
+      if (!(await provider.isAuthenticated())) {
+        await provider.authenticate();
+      }
+    } catch (err) {
       yield {
         type: "error",
-        error: new Error(`Provider "${provider.name}" is not authenticated. Run /switch ${provider.name} first.`),
+        error: err instanceof Error ? err : new Error(String(err)),
         recoverable: false,
       };
       return;
