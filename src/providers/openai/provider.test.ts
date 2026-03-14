@@ -326,7 +326,7 @@ describe("OpenAIProvider", () => {
 
     it("getDefaultModels returns expected list", () => {
       const defaults = (provider as any).getDefaultModels();
-      expect(defaults.length).toBeGreaterThanOrEqual(5);
+      expect(defaults.length).toBeGreaterThanOrEqual(3);
       expect(defaults[0].id).toBe("gpt-5.4");
     });
   });

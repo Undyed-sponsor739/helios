@@ -29,7 +29,7 @@ export function resolveProviderForModel(
   if (provider === "claude" || provider === "openai") {
     return {
       provider,
-      model: model ?? (provider === "claude" ? "claude-sonnet-4-6" : "gpt-5.2"),
+      model: model ?? (provider === "claude" ? "claude-sonnet-4-6" : "gpt-5.4"),
     };
   }
   if (model) {

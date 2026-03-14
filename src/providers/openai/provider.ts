@@ -135,14 +135,10 @@ export class OpenAIProvider implements ModelProvider {
 
   private getDefaultModels(): ModelInfo[] {
     return [
-      { id: "gpt-5.4", name: "GPT-5.4", description: "Latest flagship, recommended (~400k)" },
-      { id: "gpt-5.3-codex", name: "GPT-5.3 Codex", description: "Codex (~400k)" },
-      { id: "gpt-5.3-codex-spark", name: "GPT-5.3 Codex Spark", description: "Research preview, text-only (~400k)" },
-      { id: "gpt-5.2-codex", name: "GPT-5.2 Codex", description: "Codex (~400k)" },
-      { id: "gpt-5.2", name: "GPT-5.2", description: "(~400k)" },
-      { id: "gpt-5.1-codex-max", name: "GPT-5.1 Codex Max", description: "Max compute (~400k)" },
-      { id: "gpt-5.1", name: "GPT-5.1", description: "(~400k)" },
-      { id: "gpt-5.1-codex", name: "GPT-5.1 Codex", description: "Codex (~400k)" },
+      { id: "gpt-5.4", name: "GPT-5.4", description: "Flagship reasoning + code ($2.50/$15 per 1M tok)" },
+      { id: "gpt-5.3-codex", name: "GPT-5.3 Codex", description: "Best coding specialist ($1.75/$14 per 1M tok)" },
+      { id: "gpt-5.3-codex-spark", name: "GPT-5.3 Codex Spark", description: "Fast text-only, Pro only ($1.75/$14 per 1M tok)" },
+      { id: "gpt-5.1-codex-mini", name: "GPT-5.1 Codex Mini", description: "Budget / simple tasks ($0.25/$2 per 1M tok)" },
     ];
   }
 

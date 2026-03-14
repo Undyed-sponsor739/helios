@@ -35,14 +35,14 @@ The subagent gets its own agent session with tools and memory. It writes results
 ## Model Selection
 | Model | Provider | Best For | Cost (in/out per 1M tok) |
 |---|---|---|---|
-| claude-opus-4-6 | claude | Complex reasoning | $15 / $75 |
-| claude-sonnet-4-6 | claude | Balanced | $3 / $15 |
-| gpt-5.4 | openai | Complex reasoning | ~$15 / ~$75 |
-| gpt-5.3-codex | openai | Code tasks | ~$3 / ~$15 |
-| gpt-5.2 | openai | Balanced | ~$3 / ~$15 |
-| gpt-5.1 | openai | Cost-efficient | ~$1 / ~$5 |
+| claude-opus-4-6 | claude | Complex reasoning | $5 / $25 |
+| claude-sonnet-4-6 | claude | Balanced (default) | $3 / $15 |
+| claude-haiku-4-5 | claude | Fast & cheap | $1 / $5 |
+| gpt-5.4 | openai | Flagship reasoning + code | $2.50 / $15 |
+| gpt-5.3-codex | openai | Best coding specialist | $1.75 / $14 |
+| gpt-5.1-codex-mini | openai | Budget / simple tasks | $0.25 / $2 |
 
-Default: inherits your current model. Use cheaper models for simple retrieval/analysis.`,
+Default: inherits your current model. Use cheaper models (haiku, codex-mini) for simple retrieval/analysis.`,
     parameters: {
       type: "object",
       properties: {
